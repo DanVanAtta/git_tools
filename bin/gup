@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -eu
+
+git status &> /dev/null || (echo "Not in a git repository" && exit 1)
+
+if (git status | grep -q "modified:"); then
+  echo "You have unstaged changes, cannot update"
+  exit 2 
+fi
+
+if git remote -v | grep -q upstream; then
+  ## we're working with a fork
+  git pull --rebase upstream master
+else
+  git pull --rebase origin
+fi
+
