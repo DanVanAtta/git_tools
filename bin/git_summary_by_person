@@ -1,5 +1,25 @@
 
 
+function usage() {
+  echo "$(basename $0) name_regex [exclude_regex]"
+  echo "   name_regex: regular expression for author names"
+  echo "   [exclude_regex]: excludes authors (optional)"
+  echo "ex: $(basename $0) \"jon|smith|will|billy\""
+  exit -1
+}
 
- while read value; do COUNT=$(echo $value | sed 's/ .*//'); USER=$(echo $value | sed 's/.* //'); for i in $(seq 1 $COUNT); do echo $USER; done; done < <(git shortlog --since="6 months ago" -sn | egrep -i "< person regex here, eg: 1|2|3" | grep -v "Timmer" | tr 'A-Z' 'a-z' | sed 's/\([a-z][a-z][a-z]\).*/\1/') | sort | uniq -c | sort -nr
+NAME_REGEX=$1
+if [ -z "$NAME_REGEX" ]; then
+  usage
+fi
+
+EXCLUDE_REGEX=$2
+
+EXCLUDE_COMMAND="grep -v $EXCLUDE_REGEX"
+if [ -z "$EXCLUDE_REGEX" ]; then
+ EXCLUDE_COMMAND="cat"
+fi
+
+
+while read value; do COUNT=$(echo $value | sed 's/ .*//'); USER=$(echo $value | sed 's/.* //'); for i in $(seq 1 $COUNT); do echo $USER; done; done < <(git shortlog --since="6 months ago" -sn | egrep -i "$NAME_REGEX" | tr 'A-Z' 'a-z' | sed 's/\([a-z][a-z][a-z]\).*/\1/') | sort | uniq -c | sort -nr | $EXCLUDE_COMMAND
 
