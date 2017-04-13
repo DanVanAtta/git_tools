@@ -1,0 +1,9 @@
+#!/bin/bash
+
+
+# A script that will set the current upstream branch to be the same branch on origin.
+
+set -eux 
+CUR_BRANCH=$(gbc | sed 's/^\* //')
+
+git branch --set-upstream-to=origin/$CUR_BRANCH $CUR_BRANCH
