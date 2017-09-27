@@ -1,8 +1,7 @@
 #!/bin/bash
 
-## gbc is part of the 'git_tools' package. Stands for 'git branch current', shows current branch
-
-if gbc | grep -q master; then
+BRANCH=$(git branch | grep "^\*" | sed 's|^.* ||g')
+if [ "$BRANCH" == "master" ]; then
   if ! (git remote -v | grep -q upstream); then
     echo "Warning: Pushing to a master that is NOT A CLONE"
     read -p "Type exactly 'yes' if you wish to proceed: " -n 3 -r
@@ -17,6 +16,5 @@ if gbc | grep -q master; then
   fi
 fi
 
-BRANCH=$(gbc | sed 's|^\* ||g')
 echo "FORCE Pushing Branch: $BRANCH"
 git push origin -f $BRANCH
