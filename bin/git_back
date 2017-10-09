@@ -1,0 +1,5 @@
+#!/bin/bash
+
+## roll back one commit and reset the current changeset to look clean
+git reset --soft HEAD^
+git reset .
