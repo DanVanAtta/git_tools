@@ -1,5 +1,12 @@
 #!/bin/bash
 
 ## roll back one commit and reset the current changeset to look clean
-git reset --soft HEAD^
-git reset .
+
+
+RUN_COUNT=${1:-1}
+set -eu
+
+for i in $(seq 1 $RUN_COUNT); do
+  git reset --soft HEAD^
+  git reset .
+done
