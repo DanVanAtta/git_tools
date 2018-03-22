@@ -1,0 +1,17 @@
+#!/bin/bash
+
+## This script will loop over all local branches and print the last commit date.
+
+set -eu
+
+CUR_BRANCH=$(git branch | grep "^\*"  | sed 's/.* //')
+
+for i in $(git branch | sed 's/.* //'); do
+
+git checkout $i
+git log HEAD^..HEAD | grep ^Date
+echo ""
+
+done
+
+git checkout $CUR_BRANCH
