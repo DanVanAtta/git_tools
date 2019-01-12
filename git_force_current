@@ -2,7 +2,7 @@
 
 BRANCH=$(git branch | grep "^\*" | sed 's|^.* ||g')
 if [ "$BRANCH" == "master" ]; then
-  if ! (git remote -v | grep -q upstream); then
+  if ! (git remote -v | grep -q fork); then
     echo "Warning: Pushing to a master that is NOT A CLONE"
     read -p "Type exactly 'yes' if you wish to proceed: " -n 3 -r
     if [[ $REPLY = "yes" ]]; then
@@ -17,4 +17,4 @@ if [ "$BRANCH" == "master" ]; then
 fi
 
 echo "FORCE Pushing Branch: $BRANCH"
-git push origin -f $BRANCH
+git push fork -f $BRANCH

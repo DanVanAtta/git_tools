@@ -9,10 +9,5 @@ if (git status | grep -q "modified:"); then
   exit 2 
 fi
 
-if git remote -v | grep -q upstream; then
-  ## we're working with a fork
-  git pull --rebase upstream master
-else
-  git pull --rebase origin master
-fi
+git pull --rebase origin master
 
