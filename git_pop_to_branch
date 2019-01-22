@@ -1,0 +1,34 @@
+#!/bin/bash
+
+NEW_BRANCH=$1
+
+function usage() {
+  echo "usage: $(basename $0) [new branch]"
+  echo "  new branch: The new branch to create that will have the latest commit from the current branch"
+  echo ""
+  echo "This script will 'pop' the last commit off master and put it on a new branch"
+  exit 1
+}
+
+
+set -ue
+
+if [ -z "$NEW_BRANCH" ]; then
+  usage
+fi
+
+LAST_BRANCH=$(gbc | sed 's/^\* //')
+echo "Current branch: $LAST_BRANCH"
+
+
+git checkout -b $NEW_BRANCH
+echo "Switched to new branch: $(gbc)"
+git_push
+
+git checkout $LAST_BRANCH
+
+echo "Switching back to original branch: $(gbc)"
+echo -n "Popping commit: "
+git rev-parse HEAD
+git reset --hard HEAD^
+
