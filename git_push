@@ -1,12 +1,41 @@
 #!/bin/bash
 
-BRANCH=$(git branch | grep "^\*" | sed 's|^\* ||g')
 
-REMOTE=origin
-if git remote -v | grep -q fork; then
-  echo "Pushing Branch to Fork: $BRANCH"
-  REMOTE=fork
+set -eux
+
+BRANCH=${1-}
+
+if [ -z "$BRANCH" ]; then
+  BRANCH=$(git branch | grep "^\*" | sed 's|^\* ||g')
+fi
+END_BRANCH=${2-$BRANCH}
+
+function push_branch() {
+  local branchName=${1-}
+  if git remote -v | grep -q fork; then
+    echo "Pushing Branch to Fork: $branchName"
+    REMOTE=fork
+  else
+    REMOTE=origin
+    echo "Pushing Branch to Origin: $branchName"
+  fi	
+  git push $REMOTE $branchName
+}
+
+
+
+if [[ "$BRANCH" =~ [0-9]+ ]] && [[ "$END_BRANCH" =~ [0-9]+ ]]; then
+  BRANCH_COUNT=$(git branch | wc -l)
+	if [ $END_BRANCH -gt $BRANCH_COUNT ]; then
+    echo "Error, end branch: $END_BRANCH greater than total branches: $BRANCH_COUNT"
+	  exit 1
+  fi
+	for i in $(seq $BRANCH $END_BRANCH); do
+		BRANCH_TO_PUSH=$(git branch | head -$i | tail -1)
+	  push_branch $BRANCH_TO_PUSH
+  done
 else
-  echo "Pushing Branch to Origin: $BRANCH"
-fi	
-git push $REMOTE $BRANCH
+  push_branch $BRANCH
+fi
+
+        
