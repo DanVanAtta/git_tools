@@ -1,0 +1,4 @@
+#!/bin/bash
+
+git add .
+git commit . -F ~/.git_tools_tmp/last_commit_message

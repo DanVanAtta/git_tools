@@ -6,6 +6,10 @@
 RUN_COUNT=${1:-1}
 set -eu
 
+mkdir -p ~/.git_tools_tmp/
+
+git log -$RUN_COUNT --pretty=%B > ~/.git_tools_tmp/last_commit_message
+
 for i in $(seq 1 $RUN_COUNT); do
   git reset --soft HEAD^
   git reset .
