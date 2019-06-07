@@ -19,23 +19,7 @@ function push_branch() {
     REMOTE=origin
     echo "Pushing Branch to Origin: $branchName"
   fi	
-  git push $REMOTE $branchName
+  git push $REMOTE "$branchName"
 }
 
-
-
-if [[ "$BRANCH" =~ [0-9]+ ]] && [[ "$END_BRANCH" =~ [0-9]+ ]]; then
-  BRANCH_COUNT=$(git branch | wc -l)
-	if [ $END_BRANCH -gt $BRANCH_COUNT ]; then
-    echo "Error, end branch: $END_BRANCH greater than total branches: $BRANCH_COUNT"
-	  exit 1
-  fi
-	for i in $(seq $BRANCH $END_BRANCH); do
-		BRANCH_TO_PUSH=$(git branch | head -$i | tail -1)
-	  push_branch $BRANCH_TO_PUSH
-  done
-else
-  push_branch $BRANCH
-fi
-
-        
+push_branch "$BRANCH" 
