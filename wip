@@ -1,5 +1,20 @@
 #!/bin/bash
 
+COMMENT=${1}
+
+if [ ! -z "${2}" ]; then
+  ## TODO we probably should do this automatically
+  ## and append all args together as a comment.
+  echo "Error - must quote comment argument: '$1 $2...'" 
+  exit 1
+fi
+
+if [ -z "$COMMENT" ]; then
+  COMMENT="wip"
+else
+  COMMENT="wip: $COMMENT"
+fi
+
 git add .
-git commit . -m wip
+git commit . -m "$COMMENT"
 
