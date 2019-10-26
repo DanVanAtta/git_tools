@@ -1,0 +1,26 @@
+#!/bin/bash
+
+FILE_TO_MOVE="$1"
+BRANCH="$2"
+
+set -eux
+
+function usage() {
+  echo "usage: $0 [FILE_TO_MOVE] [BRANCH]"
+  exit 1
+}
+
+if [ ! -e "$FILE_TO_MOVE" ]; then
+  echo "File does not exist: $FILE_TO_MOVE"
+  exit 1
+fi
+
+
+TARGET_FOLDER=$(dirname $FILE_TO_MOVE)
+FILE_NAME=$(basename $FILE_TO_MOVE)
+
+cp $FILE_TO_MOVE ~/$FILE_NAME
+git checkout "$BRANCH"
+mkdir -p $TARGET_FOLDER
+mv ~/$FILE_NAME "$FILE_TO_MOVE"
+
