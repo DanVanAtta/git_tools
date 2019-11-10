@@ -1,6 +1,13 @@
 #!/bin/bash
 
-set -eu
+## TODO: deal with rename/rename and rename/delete and delete/rename cases better
+## Eg:
+## CONFLICT (Remote Rename): 
+#   CONFLICT (rename/rename): Rename "lobby-db-dao/src/test/java/org/triplea/lobby/server/db/data/UserBanDaoDataTest.java"->"lobby-db-dao/src/test/java/org/triplea/lobby/server/db/dao/user/ban/UserBanRecordTest.java" in branch "HEAD" rename "lobby-db-dao/src/test/java/org/triplea/lobby/server/db/data/UserBanDaoDataTest.java"->"lobby-db-dao/src/test/java/org/triplea/lobby/server/db/dao/user/ban/UserBanDaoDataTest.java" in "wip"->
+
+
+
+set -u
 
 git status &> /dev/null || (echo "Not in a git repository" && exit 1)
 
@@ -9,5 +16,152 @@ if (git status | grep -q "modified:"); then
   exit 2 
 fi
 
-git pull --rebase origin master
+output_file=$(mktemp)
+trap "rm -f $output_file" 0 2 3 15
+
+git pull --rebase origin master 2>&1 > "$output_file"
+
+file="$output_file"
+
+file_header=$(mktemp)
+merged_files=$(mktemp)
+conflict_files=$(mktemp)
+trap "rm -f $file_header $merged_files $conflict_files" 0 2 3 15
+
+
+egrep -v "^CONFLICT |^Auto-merging |^Removing " $file > $file_header
+egrep "^Auto-merging |^Removing " $file | sort > $merged_files
+egrep "^CONFLICT " $file | sort > $conflict_files
+
+
+cat $file_header
+
+end="\e[0m"
+bg="\e[48;5;"
+fg="\e[38;5;"
+
+#### Print merged files
+
+bg_auto_merged="${bg}28m"
+fg_auto_merged="${fg}83m"
+
+bg_removing="${bg}126m"
+fg_removing="${fg}208m"
+
+function printMergedFile() {
+  local file="$1"  
+  sed -i "s/\(Auto-merging\)\(.*\)/\\${bg_auto_merged}\1\\${end}\\${fg_auto_merged}\2\\${end}/" $file
+  sed -i "s/Removing\(.*\)/\\${bg_auto_merged}Auto-removed\\${end}\\${fg_removing}\1\\${end}/" $file
+  
+  cat $file | while read -r line; do echo -e "$line"; done
+}
+
+
+if [ -s "$merged_files" ]; then
+  echo ""
+  printMergedFile "$merged_files"
+fi
+
+
+##### Organize conflicts into sub-files
+
+conflict_content=$(mktemp)
+conflict_deleted=$(mktemp)
+conflict_renamed=$(mktemp)
+trap "rm -f $conflict_content $conflict_deleted $conflict_renamed" 0 2 3 15
+
+
+if [ -s "$conflict_files" ]; then
+  echo ""
+  grep "^CONFLICT (content): " $conflict_files > $conflict_content 
+  grep "^CONFLICT (modify/delete): " $conflict_files > $conflict_deleted
+  grep "^CONFLICT (rename/delete): " $conflict_files > $conflict_renamed
+  grep "^CONFLICT (delete/rename): " $conflict_files >> $conflict_renamed
+  grep "^CONFLICT (rename/rename): " $conflict_files >> $conflict_renamed
+fi
+
+##### Print content conflict files
+
+bg_content="${bg}220m"
+fg_content="${fg}226m"
+
+function printContentConflict() {
+  local file="$1"  
+  sed -i "s/^\(CONFLICT (content):\) Merge conflict in \(.*\)/\1 \2/" $file
+  echo -en "${fg_content}"
+  cat $file | while read -r line; do echo -e "$line"; done
+  echo -en "${end}"
+}
+
+printContentConflict $conflict_content
+
+##### Print modify/delete
+
+fg_local_delete="${fg}208m"
+fg_remote_delete="${fg}196m"
+function printModifyDelete() {
+  local file="$1"
+  local deletedLocal=$(mktemp)
+  local deletedRemotely=$(mktemp)
+  trap "rm -f $deletedLocal $deletedRemotely" 0 2 3 15
+  grep "Version HEAD of " $file | sed 's/.*Version HEAD of \(.*\) left in tree./\1/'> $deletedLocal
+  grep -v "Version HEAD of " $file | sed 's/.*Version .* of \(.*\) left in tree/\1/' > $deletedRemotely
+
+  echo -en "${fg_local_delete}"
+  cat $deletedLocal | while read -r line; do echo -e "CONFLICT (Local Delete): $line"; done
+  echo -en "${end}"
+  echo ""
+  echo -en "${fg_remote_delete}"
+  cat $deletedRemotely | while read -r line; do echo -e "CONFLICT (Remote Delete): $line"; done
+  echo -en "${end}"
+}
+
+if [ -s "$conflict_deleted" ]; then
+  echo ""
+  printModifyDelete "$conflict_deleted"
+fi
+
+###### Print rename/delete
+
+function commonPrefix() {
+  printf "%s\n%s\n" "$1" "$2" | sed -e 'N;s/^\(.*\).*\n\1.*$/\1/'
+}
+
+function colorizeRenameLine() {
+  line="$1"
+  file1=$(echo $line | sed 's|.*(.*/.*): \(.*\) deleted in.*|\1|')
+  file2=$(echo $line | sed 's|.*and renamed to \(.*\) in HEAD..*|\1|')
+
+  prefix=$(commonPrefix "$file1" "$file2")
+
+  file1Suffix=$(echo $file1 | sed "s|^$prefix||")
+  file2Suffix=$(echo $file2 | sed "s|^$prefix||")
+
+  bg_green="\e[42m"
+  bg_yellow="\e[43m"
+  yellow="\e[33m"
+  light_yellow="\e[93m"
+  green="\e[32m"
+  red="\e[1;31m"
+  bg_yellow="\e[43m"
+  end="\e[0m"
+
+  echo -ne "${red}CONFLICT (Remote Rename)${end}: "
+  echo -ne "\n   "
+  echo -ne "${green}$prefix${end}"
+  echo -e "${yellow}$file1Suffix${end}->${light_yellow}$file2Suffix${end}"
+}
+
+
+function printModifyRename() {
+  local file="$1"
+  cat $file | while read -r line; do colorizeRenameLine "$line"; done
+}
+
+if [ -s "$conflict_renamed" ]; then
+  echo ""
+  printModifyRename "$conflict_renamed"
+fi
+
+
 
