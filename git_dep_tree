@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Iterates over current changeset looking for imported files that are part of the
+# current changeset. Using this script you can see which sets of files can be
+# checked in independently.
+
 set -u
 
 ## todo: if current branch is master, abort
