@@ -1,6 +1,5 @@
 #!/bin/bash
   
- ## 'set -e' will have the script fail and halt on error rather than continue
 set -e
 
 bold=$(tput bold)

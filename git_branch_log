@@ -1,3 +1,9 @@
 #!/bin/bash
 
-git for-each-ref --sort=committerdate refs/heads/ --format='%(color:red)%(objectname:short)%(color:reset)%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))'
+# Shows a list of branches, with latest commit SHA and when it was updated.
+# Useful for showing which branches have been recently modified
+
+git for-each-ref \
+  --sort=committerdate \
+  refs/heads/ \
+  --format='%(color:red)%(objectname:short)%(color:reset)%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))'

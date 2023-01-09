@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Deletes are a target tag on local and remote origin
+
 TAG_TO_DELETE=$1
 
 function usage() {
