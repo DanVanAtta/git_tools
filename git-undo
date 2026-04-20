@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Count how many commits we are ahead of origin/HEAD
+commitCount=$(git rev-list \
+            --count $(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null \
+        | sed 's|refs/remotes/origin/||')..HEAD 2>/dev/null \
+    || echo 0)
+
+# If larger number of commits to pop, then ask for confirmation
+if [ "$commitCount" -gt 15 ]; then
+  read -r -p "About to undo $commitCount commits. Are you sure? [y/N] " confirm
+  [[ "$confirm" =~ ^[Yy]$ ]] || exit 0
+fi
+
+git reset --soft HEAD~$commitCount
+git reset .
