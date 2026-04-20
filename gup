@@ -1,9 +1,15 @@
 #!/bin/bash
 
-if [ -f $(git rev-parse --show-toplevel)/.git/refs/remotes/origin/main ]; then 
-  mainBranch="main"
-else
-  mainBranch="master"
+git_folder=$(git rev-parse --show-toplevel)
+if [ -z "$git_folder" ]; then
+  echo "Not in a git repository"
+  exit 1
+fi
+
+mainBranch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||')
+if [ -z "$mainBranch" ]; then
+  echo "error: could not determine default branch (try: git remote set-head origin --auto)" >&2
+  exit 1
 fi
 
 git pull --rebase origin $mainBranch

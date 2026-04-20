@@ -1,2 +1,5 @@
 #!/bin/bash
-git commit . -m "." && git_squash 2
+
+# Amend the last commit with any current changes, re-using (and allowing edit of) its message.
+git add .
+git commit --amend --no-edit

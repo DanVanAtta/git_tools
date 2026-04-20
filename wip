@@ -2,14 +2,8 @@
 
 # Use this to commit all current files with a 'wip' commit comment.
 
-COMMENT=$@
-
-if [ -z "$COMMENT" ]; then
-  COMMENT="wip"
-else
-  COMMENT="$COMMENT"
-fi
+COMMENT=${@:-wip}
 
 git add .
-git commit . -m "$COMMENT"
+git commit -m "$COMMENT"
 
